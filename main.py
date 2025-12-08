@@ -1,4 +1,6 @@
 import tkinter as tk
+from tkinter import ttk
+from PIL import Image, ImageTk
 import sys, os
 from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -8,8 +10,54 @@ load_dotenv()
 API_KEY = os.getenv("NFL_ODDS_API_KEY")
 
 root = tk.Tk()
+root.configure(bg="#1e1e1e")
 root.geometry("1000x1000")
 root.title("NFL H2H Best Odds Finder")
+img_path = os.path.join(os.path.dirname(__file__), "NFL.png")
+bg_img = Image.open(img_path)
+bg_photo = ImageTk.PhotoImage(bg_img)
+
+background_label = tk.Label(root, image=bg_photo)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+style = ttk.Style()
+style.theme_use("clam")
+style.configure("Small.TLabel", font=("Arial", 12), foreground="white", background="#1e1e1e")
+style.configure("Medium.TLabel", font=("Arial", 14), foreground="white", background="#1e1e1e")
+style.configure(
+    "Confirm.TButton",
+    font=("Arial", 16),
+    foreground="white",
+    background="#333333",
+    bordercolor="#333333",
+    darkcolor="#333333",
+    lightcolor="#333333",
+    focuscolor="#333333",
+    highlightcolor="#333333"
+)
+style.map(
+    "Confirm.TButton",
+    background=[("active", "#444444"), ("!active", "#333333")],
+    foreground=[("disabled", "#888888"), ("!disabled", "white")]
+)
+style.configure(
+    "Team.TButton",
+    font=("Arial", 12),
+    foreground="white",
+    background="#2a2a2a",
+    bordercolor="#2a2a2a",
+    darkcolor="#2a2a2a",
+    lightcolor="#2a2a2a",
+    focuscolor="#2a2a2a",
+    highlightcolor="#2a2a2a",
+    padding=4
+)
+style.map(
+    "Team.TButton",
+    background=[("active", "#3a3a3a"), ("!active", "#2a2a2a")],
+    foreground=[("disabled", "#888888"), ("!disabled", "white")]
+)
+
 selected_team_var = tk.StringVar(value="")
 
 class NFL_API(APIBase):
@@ -43,16 +91,17 @@ def find_best_odds(selected_team, data):
     return all_team_odds
 
 def list_upcoming_games(data):
-    label = tk.Label(root, text="Upcoming NFL Games", font=("Arial", 16))
-    label.pack(pady=10)
+    label = ttk.Label(root, text="Upcoming NFL Games", style="Medium.TLabel")
+    label.pack(pady=3)
     game_number = 1
     for game in data:
-        button_frame = tk.Frame(root)
+        button_frame = tk.Frame(root, bg="#1e1e1e")
         button_frame.columnconfigure({game_number}, weight=1)
         
-        home_team = tk.Button(button_frame, text=f"{game['home_team']}")
-        vs_label = tk.Label(button_frame, text="vs")
-        away_team = tk.Button(button_frame, text=f"{game['away_team']}")
+        home_team = ttk.Button(button_frame, text=f"{game['home_team']}", style="Team.TButton")
+        vs_label = ttk.Label(button_frame, text="vs", style="Small.TLabel")
+        away_team = ttk.Button(button_frame, text=f"{game['away_team']}", style="Team.TButton")
+
 
         home_team.bind("<Button-1>", get_selected_team)
         away_team.bind("<Button-1>", get_selected_team)
@@ -60,13 +109,13 @@ def list_upcoming_games(data):
         home_team.grid(row=game_number, column=1, sticky=tk.W+tk.E, padx=5, pady=2)
         vs_label.grid(row=game_number, column=2, padx=5, pady=2)
         away_team.grid(row=game_number, column=3, sticky=tk.W+tk.E, padx=5, pady=2)
-        button_frame.pack(pady=5)
+        button_frame.pack(pady=3)
         game_number += 1
-    confirm_button = tk.Button(root, text="Confirm Selection", font=("Arial", 20) , command=confirm_button_function)
+    confirm_button = ttk.Button(root, text="Confirm Selection", style="Confirm.TButton", command=confirm_button_function, width=20)
     confirm_button.pack(pady=10)
 
-current_selection_label = tk.Label(root, text="Selected Team: NONE", font=("Arial", 14))
-current_selection_label.pack(pady=10)
+current_selection_label = ttk.Label(root, text="Selected Team: NONE", style="Small.TLabel")
+current_selection_label.pack(pady=2)
 
 def get_selected_team(event):
     clicked_button = event.widget
@@ -80,7 +129,7 @@ def confirm_button_function():
     if team:
         all_team_odds = find_best_odds(team, data)  # make sure 'data' is accessible here
         if all_team_odds:
-            result_label = tk.Label(root, text="", font=("Arial", 16))
+            result_label = ttk.Label(root, text="", style="Medium.TLabel")
             result_label.pack(pady=10)
             if all_team_odds[0]["price"] > 0:
                 result_label.config(
@@ -99,7 +148,8 @@ def confirm_button_function():
     
 def clear_frame():
     for widget in root.winfo_children():
-        widget.destroy()
+        if widget is not background_label:
+            widget.destroy()
 
 def main():
     regions = "us"
@@ -122,6 +172,4 @@ def main():
         list_upcoming_games(data)
         root.mainloop()
     
-    
-
 main()
